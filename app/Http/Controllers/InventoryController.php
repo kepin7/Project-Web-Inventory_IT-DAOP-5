@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
 use App\Models\Category;
 use App\Models\Location;
+use App\Models\Notification;
 use App\Models\SparePart;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -116,7 +118,7 @@ class InventoryController extends Controller
             'category_id' => 'required|exists:categories,id',
             'location_id' => 'required|exists:locations,id',
             'brand' => 'nullable|string|max:255',
-            'type' => 'nullable|string|max:255',
+            'type' => 'required|string|max:255',
             'serial_number' => 'nullable|string|max:255',
             'inventory_number' => 'nullable|string|max:255',
             'condition' => 'required|in:Normal,Perbaikan,Rusak',
@@ -128,7 +130,27 @@ class InventoryController extends Controller
             $validated['image'] = $request->file('image')->store('spare_parts', 'public');
         }
 
-        SparePart::create($validated);
+        $sparePart = SparePart::create($validated);
+
+        $itemName = trim(($validated['brand'] ?? '') . ' ' . ($validated['type'] ?? ''));
+        if (empty($itemName)) {
+            $itemName = $validated['inventory_number'] ?? 'Barang';
+        }
+
+        Activity::create([
+            'user_name' => 'Jaelani Nurazizah',
+            'action' => 'created',
+            'description' => "Menambahkan {$itemName} ke inventaris",
+            'category_id' => $validated['category_id'],
+            'item_name' => $itemName,
+        ]);
+
+        Notification::create([
+            'title' => 'Barang Ditambahkan',
+            'message' => "{$itemName} berhasil ditambahkan ke inventaris.",
+            'type' => 'activity',
+            'link' => '/inventory',
+        ]);
 
         return redirect()->back()->with('success', 'Barang berhasil ditambahkan.');
     }
@@ -139,7 +161,7 @@ class InventoryController extends Controller
             'category_id' => 'required|exists:categories,id',
             'location_id' => 'required|exists:locations,id',
             'brand' => 'nullable|string|max:255',
-            'type' => 'nullable|string|max:255',
+            'type' => 'required|string|max:255',
             'serial_number' => 'nullable|string|max:255',
             'inventory_number' => 'nullable|string|max:255',
             'condition' => 'required|in:Normal,Perbaikan,Rusak',
@@ -154,17 +176,63 @@ class InventoryController extends Controller
             $validated['image'] = $request->file('image')->store('spare_parts', 'public');
         }
 
+        $oldItemName = trim(($sparePart->brand ?? '') . ' ' . ($sparePart->type ?? ''));
+        if (empty($oldItemName)) {
+            $oldItemName = $sparePart->inventory_number ?? 'Barang';
+        }
+
         $sparePart->update($validated);
+
+        $newItemName = trim(($validated['brand'] ?? '') . ' ' . ($validated['type'] ?? ''));
+        if (empty($newItemName)) {
+            $newItemName = $validated['inventory_number'] ?? $oldItemName;
+        }
+
+        Activity::create([
+            'user_name' => 'Jaelani Nurazizah',
+            'action' => 'updated',
+            'description' => "Memperbarui data {$newItemName}",
+            'category_id' => $validated['category_id'],
+            'item_name' => $newItemName,
+        ]);
+
+        Notification::create([
+            'title' => 'Data Barang Diperbarui',
+            'message' => "Data {$newItemName} berhasil diperbarui.",
+            'type' => 'activity',
+            'link' => '/inventory',
+        ]);
 
         return redirect()->back()->with('success', 'Barang berhasil diperbarui.');
     }
 
     public function destroy(SparePart $sparePart)
     {
+        $itemName = trim(($sparePart->brand ?? '') . ' ' . ($sparePart->type ?? ''));
+        if (empty($itemName)) {
+            $itemName = $sparePart->inventory_number ?? 'Barang';
+        }
+        $categoryId = $sparePart->category_id;
+
         if ($sparePart->image) {
             Storage::disk('public')->delete($sparePart->image);
         }
         $sparePart->delete();
+
+        Activity::create([
+            'user_name' => 'Jaelani Nurazizah',
+            'action' => 'deleted',
+            'description' => "Menghapus {$itemName} dari inventaris",
+            'category_id' => $categoryId,
+            'item_name' => $itemName,
+        ]);
+
+        Notification::create([
+            'title' => 'Barang Dihapus',
+            'message' => "{$itemName} berhasil dihapus dari inventaris.",
+            'type' => 'activity',
+            'link' => '/inventory',
+        ]);
 
         return redirect()->back()->with('success', 'Barang berhasil dihapus.');
     }

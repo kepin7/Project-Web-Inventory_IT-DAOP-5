@@ -10,6 +10,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\AiExtractController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ExportController;
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
@@ -30,6 +32,12 @@ Route::delete('/management/locations/{location}', [LocationController::class, 'd
 Route::get('/stock-movement', [StockMovementController::class, 'index'])->name('stock-movement');
 Route::post('/stock-movement', [StockMovementController::class, 'store'])->name('stock-movement.store');
 
+// Export Routes
+Route::get('/export/{type}/{format}', [ExportController::class, 'export'])->name('export');
+
 // API Routes
 Route::get('/api/stock-movement/{transaction_id}', [StockMovementController::class, 'show']);
 Route::post('/api/ai/extract-item', [AiExtractController::class, 'extract']);
+Route::get('/api/notifications', [NotificationController::class, 'index']);
+Route::put('/api/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+Route::put('/api/notifications/read-all', [NotificationController::class, 'markAllRead']);

@@ -326,7 +326,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 mb-1">Tipe <span class="text-gray-400 font-normal ml-1">(opsional)</span></label>
-                                <input v-model="form.type" type="text" :class="{'border-red-300': form.errors.type}" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-[#312e81] focus:border-[#312e81]">
+                                <input v-model="form.type" type="text" required :class="{'border-red-300': form.errors.type}" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-[#312e81] focus:border-[#312e81]">
                                 <div v-if="form.errors.type" class="text-red-500 text-xs mt-1">{{ form.errors.type }}</div>
                             </div>
                             <div>

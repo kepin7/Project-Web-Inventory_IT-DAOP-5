@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
+use App\Models\Category;
+use App\Models\Notification;
 use App\Models\SparePart;
 use App\Models\StockMovement;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -19,12 +23,52 @@ class DashboardController extends Controller
 
         // Calculate Menipis based on brand and type (quantity <= 3, hanya barang tersedia)
         $brandTypeCounts = SparePart::where('is_available', true)
-            ->select('brand', 'type', \DB::raw('count(*) as count'))
-            ->groupBy('brand', 'type')
+            ->select('brand', 'type', 'category_id', \DB::raw('count(*) as count'))
+            ->groupBy('brand', 'type', 'category_id')
             ->get();
 
         $menipisCount = $brandTypeCounts->where('count', '<=', 3)->where('count', '>', 0)->count();
         $habisCount = SparePart::where('is_available', false)->count();
+
+        // Tindakan Diperlukan - items with low/zero stock
+        $allBrandTypeCounts = SparePart::select('brand', 'type', 'category_id', \DB::raw('count(*) as count'))
+            ->groupBy('brand', 'type', 'category_id')
+            ->get();
+
+        $actionRequiredItems = $allBrandTypeCounts
+            ->filter(fn ($item) => $item->count <= 3)
+            ->values()
+            ->map(function ($item) {
+                $firstPart = SparePart::where('brand', $item->brand)
+                    ->where('type', $item->type)
+                    ->where('category_id', $item->category_id)
+                    ->first();
+
+                $itemName = trim(($item->brand ?? '') . ' ' . ($item->type ?? ''));
+                if (empty($itemName)) {
+                    $itemName = $firstPart->inventory_number ?? 'Barang';
+                }
+
+                return [
+                    'name' => $itemName,
+                    'qty' => (int) $item->count,
+                    'status' => $item->count == 0 ? 'Habis' : 'Menipis',
+                    'category' => $firstPart?->category?->name ?? '-',
+                ];
+            })
+            ->slice(0, 10)
+            ->values();
+
+        // Aktivitas Terkini - filter by category
+        $categoryId = $request->query('category_id');
+        $activitiesQuery = Activity::with('category')->latest();
+
+        if ($categoryId && $categoryId !== '') {
+            $activitiesQuery->where('category_id', $categoryId);
+        }
+
+        $activities = $activitiesQuery->take(10)->get();
+        $allCategories = Category::all();
 
         $rawCategories = SparePart::join('categories', 'spare_parts.category_id', '=', 'categories.id')
             ->select('categories.name', \DB::raw('count(spare_parts.id) as count'))
@@ -124,6 +168,12 @@ class DashboardController extends Controller
             'max' => max(10, max($dataIn) + 10, max($dataOut) + 10), // dynamically set max y-axis
         ];
 
+        // Generate stock notifications if not exists in the last 24 hours
+        $this->generateStockNotifications($brandTypeCounts);
+
+        // Count unread notifications
+        $unreadNotificationCount = Notification::unread()->count();
+
         return Inertia::render('Dashboard/Index', [
             'totalSpareParts' => $totalSpareParts,
             'normalCount' => $normalCount,
@@ -134,6 +184,44 @@ class DashboardController extends Controller
             'categoriesData' => $categoriesData,
             'growthPercentage' => $growthPercentage,
             'chartData' => $chartData,
+            'activities' => $activities,
+            'allCategories' => $allCategories,
+            'selectedCategoryId' => $categoryId,
+            'actionRequiredItems' => $actionRequiredItems,
+            'unreadNotificationCount' => $unreadNotificationCount,
         ]);
+    }
+
+    private function generateStockNotifications($brandTypeCounts)
+    {
+        foreach ($brandTypeCounts as $item) {
+            if ($item->count > 3) {
+                continue;
+            }
+
+            $itemName = trim(($item->brand ?? '') . ' ' . ($item->type ?? ''));
+
+            if (empty($itemName)) {
+                continue;
+            }
+
+            $type = $item->count == 0 ? 'habis' : 'menipis';
+            $title = $item->count == 0 ? 'Stok Habis' : 'Stok Menipis';
+
+            // Check if notification already exists in the last 24 hours
+            $exists = Notification::where('title', $title)
+                ->where('message', 'like', "%{$itemName}%")
+                ->where('created_at', '>=', now()->subDay())
+                ->exists();
+
+            if (!$exists) {
+                Notification::create([
+                    'title' => $title,
+                    'message' => "{$itemName} memiliki stok {$item->count} unit.",
+                    'type' => 'stock',
+                    'link' => '/inventory',
+                ]);
+            }
+        }
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
+use App\Models\Notification;
 use App\Models\SparePart;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
@@ -94,7 +96,32 @@ class StockMovementController extends Controller
             SparePart::where('id', $sparePartId)->update([
                 'is_available' => $validated['type'] === 'in',
             ]);
+
+            $sparePart = SparePart::find($sparePartId);
+            $itemName = trim(($sparePart->brand ?? '') . ' ' . ($sparePart->type ?? ''));
+            if (empty($itemName)) {
+                $itemName = $sparePart->inventory_number ?? 'Barang';
+            }
+
+            $typeLabel = $validated['type'] === 'in' ? 'masuk' : 'keluar';
+
+            Activity::create([
+                'user_name' => $validated['pic_name'],
+                'action' => $validated['type'] === 'in' ? 'stock_in' : 'stock_out',
+                'description' => "Stok {$typeLabel}: {$itemName} ({$transactionId})",
+                'category_id' => $sparePart->category_id,
+                'item_name' => $itemName,
+            ]);
         }
+
+        $typeLabel = $validated['type'] === 'in' ? 'Masuk' : 'Keluar';
+
+        Notification::create([
+            'title' => "Stok {$typeLabel}",
+            'message' => "Transaksi {$transactionId} dicatat: stok {$typeLabel} untuk " . count($validated['spare_part_ids']) . " barang.",
+            'type' => 'activity',
+            'link' => '/stock-movement',
+        ]);
 
         return redirect()->back()->with('success', 'Transaksi pergerakan stok berhasil dicatat.');
     }
