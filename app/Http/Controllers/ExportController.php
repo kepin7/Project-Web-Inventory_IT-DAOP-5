@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Exports\InventarisExport;
-use App\Exports\KategoriExport;
-use App\Exports\PergerakanStokExport;
+use App\Exports\LaporanGabunganExport;
 use App\Models\Category;
+use App\Models\SparePart;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Carbon;
@@ -13,37 +13,23 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ExportController extends Controller
 {
-    public function export(string $type, string $format)
+    public function export(string $format)
     {
-        $validTypes = ['inventaris', 'pergerakan-stok', 'kategori'];
         $validFormats = ['pdf', 'xlsx', 'csv'];
 
-        if (!in_array($type, $validTypes) || !in_array($format, $validFormats)) {
+        if (!in_array($format, $validFormats)) {
             abort(404);
         }
 
         $dateLabel = Carbon::now()->format('Ymd_His');
-        $fileName = strtoupper(str_replace('-', '_', $type)) . "_{$dateLabel}";
-
-        if ($type === 'inventaris') {
-            $export = new InventarisExport();
-            $viewName = 'exports.inventaris_pdf';
-            $title = 'Laporan Inventaris Spare Part';
-        } elseif ($type === 'pergerakan-stok') {
-            $export = new PergerakanStokExport();
-            $viewName = 'exports.pergerakan_stok_pdf';
-            $title = 'Laporan Pergerakan Stok';
-        } else {
-            $export = new KategoriExport();
-            $viewName = 'exports.kategori_pdf';
-            $title = 'Laporan Data Kategori';
-        }
+        $fileName = "LAPORAN_GABUNGAN_{$dateLabel}";
 
         if ($format === 'pdf') {
-            $data = $export->data();
-            $view = View::make($viewName, [
-                'data' => $data,
-                'title' => $title,
+            $view = View::make('exports.laporan_gabungan_pdf', [
+                'inventaris' => SparePart::with(['category', 'location'])->get(),
+                'pergerakanStok' => StockMovement::with('sparePart')->latest('date')->get(),
+                'kategori' => Category::withCount('spareParts')->get(),
+                'title' => 'Laporan Gabungan Inventory Spare Part',
                 'generatedAt' => Carbon::now()->format('d/m/Y H:i:s'),
             ]);
 
@@ -54,9 +40,9 @@ class ExportController extends Controller
         }
 
         if ($format === 'xlsx') {
-            return Excel::download($export, $fileName . '.xlsx');
+            return Excel::download(new LaporanGabunganExport(), $fileName . '.xlsx');
         }
 
-        return Excel::download($export, $fileName . '.csv', \Maatwebsite\Excel\Excel::CSV);
+        return Excel::download(new InventarisExport(), $fileName . '.csv', \Maatwebsite\Excel\Excel::CSV);
     }
 }

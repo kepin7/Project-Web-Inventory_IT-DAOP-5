@@ -33,7 +33,7 @@ Route::get('/stock-movement', [StockMovementController::class, 'index'])->name('
 Route::post('/stock-movement', [StockMovementController::class, 'store'])->name('stock-movement.store');
 
 // Export Routes
-Route::get('/export/{type}/{format}', [ExportController::class, 'export'])->name('export');
+Route::get('/export/{format}', [ExportController::class, 'export'])->name('export');
 
 // API Routes
 Route::get('/api/stock-movement/{transaction_id}', [StockMovementController::class, 'show']);

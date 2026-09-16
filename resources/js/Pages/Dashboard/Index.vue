@@ -31,17 +31,9 @@
                         <div v-if="exportMenuOpen" class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
                             <div class="px-5 py-4 border-b border-gray-100">
                                 <h3 class="font-bold text-gray-900 text-sm">Ekspor Laporan</h3>
-                                <p class="text-xs text-gray-500 mt-0.5">Pilih tipe data dan format</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Gabungan Inventaris, Pergerakan Stok & Kategori</p>
                             </div>
                             <div class="p-4 space-y-4">
-                                <div>
-                                    <label class="text-xs font-semibold text-gray-600 mb-1.5 block">Jenis Data</label>
-                                    <select v-model="exportType" class="w-full text-sm border-gray-200 rounded-lg text-gray-700 px-3 py-2 focus:ring-[#312e81] focus:border-[#312e81]">
-                                        <option value="inventaris">Inventaris</option>
-                                        <option value="pergerakan-stok">Pergerakan Stok</option>
-                                        <option value="kategori">Kategori</option>
-                                    </select>
-                                </div>
                                 <div>
                                     <label class="text-xs font-semibold text-gray-600 mb-1.5 block">Format</label>
                                     <div class="grid grid-cols-3 gap-2">
@@ -438,14 +430,13 @@ const brokenPercentage = computed(() => getPercentage(props.brokenCount));
 // ===== EXPORT =====
 const exportMenuOpen = ref(false);
 const exportDropdownRef = ref(null);
-const exportType = ref('inventaris');
 
 const toggleExportMenu = () => {
     exportMenuOpen.value = !exportMenuOpen.value;
 };
 
 const downloadExport = (format) => {
-    window.location.href = `/export/${exportType.value}/${format}`;
+    window.location.href = `/export/${format}`;
     exportMenuOpen.value = false;
 };
 
