@@ -5,8 +5,8 @@
         <!-- Header Section -->
         <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-[28px] font-medium text-gray-800">Stock Movement</h1>
-                <p class="text-gray-400 text-sm mt-1">Track and manage inventory flow</p>
+                <h1 class="text-[28px] font-medium text-gray-800">Pergerakan Stok</h1>
+                <p class="text-gray-400 text-sm mt-1">Lacak dan kelola alur keluar masuk barang inventaris</p>
             </div>
             
             <div class="flex items-center gap-3">
@@ -21,7 +21,7 @@
                 </button>
                 <button @click="openAddModal" class="px-5 py-2.5 bg-[#1e1b4b] hover:bg-[#312e81] text-white text-sm font-medium rounded-lg shadow-sm transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    New Movement
+                    Pergerakan Baru
                 </button>
             </div>
         </div>
@@ -35,13 +35,15 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 5L5 19m0 0V9m0 10h10" /></svg>
                     </div>
                 </div>
-                <div class="text-sm font-medium text-gray-400 mb-1 truncate" :title="periodLabel">Total Stock In ({{ periodLabel }})</div>
+                <div class="text-sm font-medium text-gray-400 mb-1 truncate" :title="periodLabel">Total Stok Masuk ({{ periodLabel }})</div>
                 <div class="flex items-center gap-3 mb-2">
                     <div class="text-3xl font-bold text-gray-900">{{ summary.in }} <span class="text-lg font-semibold text-gray-500">Trx</span></div>
-                    <div class="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100/50 mt-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
-                        12.5%
-                    </div>
+                    <template v-if="summary.in + summary.out > 0">
+                        <div class="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100/50 mt-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
+                            {{ getPercentage(summary.in) }}%
+                        </div>
+                    </template>
                 </div>
             </div>
 
@@ -52,13 +54,15 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 19L19 5m0 0v10m0-10H9" /></svg>
                     </div>
                 </div>
-                <div class="text-sm font-medium text-gray-400 mb-1 truncate" :title="periodLabel">Total Stock Out ({{ periodLabel }})</div>
+                <div class="text-sm font-medium text-gray-400 mb-1 truncate" :title="periodLabel">Total Stok Keluar ({{ periodLabel }})</div>
                 <div class="flex items-center gap-3 mb-2">
                     <div class="text-3xl font-bold text-gray-900">{{ summary.out }} <span class="text-lg font-semibold text-gray-500">Trx</span></div>
-                    <div class="flex items-center gap-1 text-[11px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md border border-red-100/50 mt-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 4.5l15 15m0 0h-11.25m11.25 0V8.25" /></svg>
-                        5.2%
-                    </div>
+                    <template v-if="summary.in + summary.out > 0">
+                        <div class="flex items-center gap-1 text-[11px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md border border-red-100/50 mt-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 4.5l15 15m0 0h-11.25m11.25 0V8.25" /></svg>
+                            {{ getPercentage(summary.out) }}%
+                        </div>
+                    </template>
                 </div>
             </div>
 

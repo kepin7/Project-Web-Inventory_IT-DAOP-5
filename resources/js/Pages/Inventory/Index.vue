@@ -488,11 +488,13 @@ const getConditionBadgeClass = (condition) => {
 };
 
 const getStatusBadgeClass = (item) => {
-    const qty = item.quantity || 0;
-    
-    if (qty === 0) {
+    // Prioritas: jika barang sudah keluar (stock out), tampilkan Habis
+    if (item.is_available === false || item.is_available === 0) {
         return { text: 'Habis', class: 'inline-flex px-3 py-1 rounded-md text-[11px] font-semibold bg-[#fecaca] text-[#991b1b]' };
-    } else if (qty <= 3) {
+    }
+    
+    const qty = item.quantity || 0;
+    if (qty <= 3) {
         return { text: 'Menipis', class: 'inline-flex px-3 py-1 rounded-md text-[11px] font-semibold bg-[#fef08a] text-[#854d0e]' };
     } else {
         return { text: 'Aman', class: 'inline-flex px-3 py-1 rounded-md text-[11px] font-semibold bg-[#dcfce7] text-[#166534]' };

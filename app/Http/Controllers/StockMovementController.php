@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SparePart;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,7 +13,7 @@ class StockMovementController extends Controller
     {
         $dateStart = $request->query('date_start');
         $dateEnd = $request->query('date_end');
-        
+
         $movementsQuery = StockMovement::with(['sparePart'])
             ->select('transaction_id', 'type', 'pic_name', 'reference', 'notes', 'condition',
                 \DB::raw('MAX(id) as id'),
@@ -31,7 +32,7 @@ class StockMovementController extends Controller
         }
 
         $movements = $movementsQuery->paginate(15)->withQueryString();
-        
+
         // Custom counting logic for transactions (not individual items) based on period
         $summaryQueryIn = StockMovement::select('transaction_id')->where('type', 'in')->groupBy('transaction_id');
         $summaryQueryOut = StockMovement::select('transaction_id')->where('type', 'out')->groupBy('transaction_id');
@@ -50,16 +51,16 @@ class StockMovementController extends Controller
 
         $summary = [
             'in' => $inTransactions,
-            'out' => $outTransactions
+            'out' => $outTransactions,
         ];
 
-        $spareParts = \App\Models\SparePart::select('id', 'brand', 'type', 'serial_number', 'inventory_number')->get();
+        $spareParts = SparePart::select('id', 'brand', 'type', 'serial_number', 'inventory_number')->get();
 
         return Inertia::render('StockMovement/Index', [
             'movements' => $movements,
             'summary' => $summary,
             'spare_parts' => $spareParts,
-            'filters' => $request->only(['date_start', 'date_end'])
+            'filters' => $request->only(['date_start', 'date_end']),
         ]);
     }
 
@@ -72,10 +73,10 @@ class StockMovementController extends Controller
             'notes' => 'nullable|string',
             'condition' => 'nullable|string|max:255',
             'spare_part_ids' => 'required|array|min:1',
-            'spare_part_ids.*' => 'exists:spare_parts,id'
+            'spare_part_ids.*' => 'exists:spare_parts,id',
         ]);
 
-        $transactionId = 'TRX-' . date('YmdHis') . '-' . strtoupper(\Str::random(4));
+        $transactionId = 'TRX-'.date('YmdHis').'-'.strtoupper(\Str::random(4));
 
         foreach ($validated['spare_part_ids'] as $sparePartId) {
             StockMovement::create([
@@ -86,11 +87,13 @@ class StockMovementController extends Controller
                 'pic_name' => $validated['pic_name'],
                 'notes' => $validated['notes'],
                 'condition' => $validated['condition'],
-                'reference' => 'N/A' // Or maybe taken from request if needed
+                'reference' => 'N/A',
             ]);
 
-            // Optional: If 'out', maybe update the condition or location of the spare part.
-            // Let's just leave the record for now as requested.
+            // Update ketersediaan barang berdasarkan tipe transaksi
+            SparePart::where('id', $sparePartId)->update([
+                'is_available' => $validated['type'] === 'in',
+            ]);
         }
 
         return redirect()->back()->with('success', 'Transaksi pergerakan stok berhasil dicatat.');
@@ -99,8 +102,9 @@ class StockMovementController extends Controller
     public function show($transaction_id)
     {
         $movements = StockMovement::with('sparePart')
-                        ->where('transaction_id', $transaction_id)
-                        ->get();
+            ->where('transaction_id', $transaction_id)
+            ->get();
+
         return response()->json($movements);
     }
 }

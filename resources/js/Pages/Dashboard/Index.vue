@@ -201,13 +201,13 @@
                 <div class="flex-1 flex flex-col justify-center gap-8">
                     <CategoryChart :categoriesData="categoriesData" />
                     
-                    <div class="flex flex-col gap-3">
+                    <div class="flex flex-col gap-3 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin">
                         <div v-for="(cat, i) in categoriesData" :key="cat.name" class="flex items-center justify-between text-sm">
                             <div class="flex items-center gap-3">
-                                <span class="w-3 h-3 rounded-full" :style="{ backgroundColor: getCategoryColor(i) }"></span>
-                                <span class="text-gray-600">{{ cat.name }}</span>
+                                <span class="w-3 h-3 rounded-full flex-shrink-0" :style="{ backgroundColor: getCategoryColor(i) }"></span>
+                                <span class="text-gray-600 truncate max-w-[120px]" :title="cat.name">{{ cat.name }}</span>
                             </div>
-                            <div class="text-right">
+                            <div class="text-right flex-shrink-0">
                                 <div class="font-bold text-gray-900">{{ cat.count }} <span class="font-normal text-gray-500 text-xs">pcs</span></div>
                                 <div class="text-gray-400 text-xs">{{ cat.percentage }}%</div>
                             </div>
