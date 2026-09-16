@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
 use App\Models\Location;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -41,6 +43,20 @@ class LocationController extends Controller
 
         Location::create($validated);
 
+        Activity::create([
+            'user_name' => 'Jaelani Nurazizah',
+            'action' => 'created',
+            'description' => "Menambahkan lokasi {$validated['name']}",
+            'item_name' => $validated['name'],
+        ]);
+
+        Notification::create([
+            'title' => 'Lokasi Ditambahkan',
+            'message' => "Lokasi {$validated['name']} berhasil dibuat.",
+            'type' => 'system',
+            'link' => '/management/locations',
+        ]);
+
         return redirect()->back()->with('success', 'Lokasi berhasil ditambahkan.');
     }
 
@@ -74,6 +90,20 @@ class LocationController extends Controller
 
         $location->update($validated);
 
+        Activity::create([
+            'user_name' => 'Jaelani Nurazizah',
+            'action' => 'updated',
+            'description' => "Memperbarui lokasi {$validated['name']}",
+            'item_name' => $validated['name'],
+        ]);
+
+        Notification::create([
+            'title' => 'Lokasi Diperbarui',
+            'message' => "Lokasi {$validated['name']} berhasil diperbarui.",
+            'type' => 'system',
+            'link' => '/management/locations',
+        ]);
+
         return redirect()->back()->with('success', 'Lokasi berhasil diperbarui.');
     }
 
@@ -86,7 +116,22 @@ class LocationController extends Controller
             return redirect()->back()->with('error', 'Lokasi tidak dapat dihapus karena masih memiliki barang terdaftar.');
         }
 
+        $locationName = $location->name;
         $location->delete();
+
+        Activity::create([
+            'user_name' => 'Jaelani Nurazizah',
+            'action' => 'deleted',
+            'description' => "Menghapus lokasi {$locationName}",
+            'item_name' => $locationName,
+        ]);
+
+        Notification::create([
+            'title' => 'Lokasi Dihapus',
+            'message' => "Lokasi {$locationName} berhasil dihapus.",
+            'type' => 'system',
+            'link' => '/management/locations',
+        ]);
 
         return redirect()->back()->with('success', 'Lokasi berhasil dihapus.');
     }
