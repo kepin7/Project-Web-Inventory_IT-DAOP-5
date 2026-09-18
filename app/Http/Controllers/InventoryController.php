@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Models\Activity;
+use App\Models\Category;
+use App\Models\Location;
+use App\Models\Notification;
 use App\Models\SparePart;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class InventoryController extends Controller
 {
@@ -15,17 +20,17 @@ class InventoryController extends Controller
         // Filter by Search
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('brand', 'like', "%{$search}%")
-                  ->orWhere('type', 'like', "%{$search}%")
-                  ->orWhere('serial_number', 'like', "%{$search}%")
-                  ->orWhere('inventory_number', 'like', "%{$search}%")
-                  ->orWhereHas('category', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('location', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('type', 'like', "%{$search}%")
+                    ->orWhere('serial_number', 'like', "%{$search}%")
+                    ->orWhere('inventory_number', 'like', "%{$search}%")
+                    ->orWhereHas('category', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('location', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -60,12 +65,12 @@ class InventoryController extends Controller
 
         if ($sortBy == 'category') {
             $query->join('categories', 'spare_parts.category_id', '=', 'categories.id')
-                  ->orderBy('categories.name', $sortDir)
-                  ->select('spare_parts.*');
+                ->orderBy('categories.name', $sortDir)
+                ->select('spare_parts.*');
         } elseif ($sortBy == 'location') {
             $query->join('locations', 'spare_parts.location_id', '=', 'locations.id')
-                  ->orderBy('locations.name', $sortDir)
-                  ->select('spare_parts.*');
+                ->orderBy('locations.name', $sortDir)
+                ->select('spare_parts.*');
         } elseif ($sortBy == 'brand') {
             $query->orderBy('brand', $sortDir)->orderBy('type', $sortDir);
         } else {
@@ -80,21 +85,22 @@ class InventoryController extends Controller
         }
 
         $spareParts = $query->paginate(15)->withQueryString();
-        $categories = \App\Models\Category::all();
-        $locations = \App\Models\Location::all();
+        $categories = Category::all();
+        $locations = Location::where('status', 'aktif')->get();
 
         // Menghitung quantity berdasarkan brand dan type
         // Kita hitung dari seluruh tabel tanpa filter agar quantity barang yang sama tetap konsisten (meskipun terpotong paginate)
         $brandTypeCounts = SparePart::select('brand', 'type', \DB::raw('count(*) as count'))
             ->groupBy('brand', 'type')
             ->get()
-            ->keyBy(function($item) {
-                return $item->brand . '|' . $item->type;
+            ->keyBy(function ($item) {
+                return $item->brand.'|'.$item->type;
             });
 
         $spareParts->getCollection()->transform(function ($item) use ($brandTypeCounts) {
-            $key = $item->brand . '|' . $item->type;
+            $key = $item->brand.'|'.$item->type;
             $item->quantity = $brandTypeCounts->has($key) ? $brandTypeCounts[$key]->count : 1;
+
             return $item;
         });
 
@@ -102,7 +108,7 @@ class InventoryController extends Controller
             'spareParts' => $spareParts,
             'categories' => $categories,
             'locations' => $locations,
-            'filters' => $request->only(['search', 'category', 'location', 'condition', 'date_start', 'date_end', 'sort_by', 'sort_dir'])
+            'filters' => $request->only(['search', 'category', 'location', 'condition', 'date_start', 'date_end', 'sort_by', 'sort_dir', 'status']),
         ]);
     }
 
@@ -124,7 +130,27 @@ class InventoryController extends Controller
             $validated['image'] = $request->file('image')->store('spare_parts', 'public');
         }
 
-        SparePart::create($validated);
+        $sparePart = SparePart::create($validated);
+
+        $itemName = trim(($validated['brand'] ?? '') . ' ' . ($validated['type'] ?? ''));
+        if (empty($itemName)) {
+            $itemName = $validated['inventory_number'] ?? 'Barang';
+        }
+
+        Activity::create([
+            'user_name' => auth()->user()->name ?? 'Sistem',
+            'action' => 'created',
+            'description' => "Menambahkan {$itemName} ke inventaris",
+            'category_id' => $validated['category_id'],
+            'item_name' => $itemName,
+        ]);
+
+        Notification::create([
+            'title' => 'Barang Ditambahkan',
+            'message' => "{$itemName} berhasil ditambahkan ke inventaris.",
+            'type' => 'activity',
+            'link' => '/inventory',
+        ]);
 
         return redirect()->back()->with('success', 'Barang berhasil ditambahkan.');
     }
@@ -145,22 +171,69 @@ class InventoryController extends Controller
 
         if ($request->hasFile('image')) {
             if ($sparePart->image) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($sparePart->image);
+                Storage::disk('public')->delete($sparePart->image);
             }
             $validated['image'] = $request->file('image')->store('spare_parts', 'public');
         }
 
+        $oldItemName = trim(($sparePart->brand ?? '') . ' ' . ($sparePart->type ?? ''));
+        if (empty($oldItemName)) {
+            $oldItemName = $sparePart->inventory_number ?? 'Barang';
+        }
+
         $sparePart->update($validated);
+
+        $newItemName = trim(($validated['brand'] ?? '') . ' ' . ($validated['type'] ?? ''));
+        if (empty($newItemName)) {
+            $newItemName = $validated['inventory_number'] ?? $oldItemName;
+        }
+
+        Activity::create([
+            'user_name' => auth()->user()->name ?? 'Sistem',
+            'action' => 'updated',
+            'description' => "Memperbarui data {$newItemName}",
+            'category_id' => $validated['category_id'],
+            'item_name' => $newItemName,
+        ]);
+
+        Notification::create([
+            'title' => 'Data Barang Diperbarui',
+            'message' => "Data {$newItemName} berhasil diperbarui.",
+            'type' => 'activity',
+            'link' => '/inventory',
+        ]);
 
         return redirect()->back()->with('success', 'Barang berhasil diperbarui.');
     }
 
     public function destroy(SparePart $sparePart)
     {
+        $itemName = trim(($sparePart->brand ?? '') . ' ' . ($sparePart->type ?? ''));
+        if (empty($itemName)) {
+            $itemName = $sparePart->inventory_number ?? 'Barang';
+        }
+        $categoryId = $sparePart->category_id;
+
         if ($sparePart->image) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($sparePart->image);
+            Storage::disk('public')->delete($sparePart->image);
         }
         $sparePart->delete();
+
+        Activity::create([
+            'user_name' => auth()->user()->name ?? 'Sistem',
+            'action' => 'deleted',
+            'description' => "Menghapus {$itemName} dari inventaris",
+            'category_id' => $categoryId,
+            'item_name' => $itemName,
+        ]);
+
+        Notification::create([
+            'title' => 'Barang Dihapus',
+            'message' => "{$itemName} berhasil dihapus dari inventaris.",
+            'type' => 'activity',
+            'link' => '/inventory',
+        ]);
+
         return redirect()->back()->with('success', 'Barang berhasil dihapus.');
     }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
 use App\Models\Category;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -40,6 +42,20 @@ class CategoryController extends Controller
 
         Category::create($validated);
 
+        Activity::create([
+            'user_name' => auth()->user()->name ?? 'Sistem',
+            'action' => 'created',
+            'description' => "Menambahkan kategori {$validated['name']}",
+            'item_name' => $validated['name'],
+        ]);
+
+        Notification::create([
+            'title' => 'Kategori Ditambahkan',
+            'message' => "Kategori {$validated['name']} berhasil dibuat.",
+            'type' => 'system',
+            'link' => '/management/category',
+        ]);
+
         return redirect()->back()->with('success', 'Kategori berhasil ditambahkan.');
     }
 
@@ -72,6 +88,20 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
+        Activity::create([
+            'user_name' => auth()->user()->name ?? 'Sistem',
+            'action' => 'updated',
+            'description' => "Memperbarui kategori {$validated['name']}",
+            'item_name' => $validated['name'],
+        ]);
+
+        Notification::create([
+            'title' => 'Kategori Diperbarui',
+            'message' => "Kategori {$validated['name']} berhasil diperbarui.",
+            'type' => 'system',
+            'link' => '/management/category',
+        ]);
+
         return redirect()->back()->with('success', 'Kategori berhasil diperbarui.');
     }
 
@@ -84,7 +114,22 @@ class CategoryController extends Controller
             return redirect()->back()->with('error', 'Kategori tidak dapat dihapus karena masih memiliki barang terdaftar.');
         }
 
+        $categoryName = $category->name;
         $category->delete();
+
+        Activity::create([
+            'user_name' => auth()->user()->name ?? 'Sistem',
+            'action' => 'deleted',
+            'description' => "Menghapus kategori {$categoryName}",
+            'item_name' => $categoryName,
+        ]);
+
+        Notification::create([
+            'title' => 'Kategori Dihapus',
+            'message' => "Kategori {$categoryName} berhasil dihapus.",
+            'type' => 'system',
+            'link' => '/management/category',
+        ]);
 
         return redirect()->back()->with('success', 'Kategori berhasil dihapus.');
     }

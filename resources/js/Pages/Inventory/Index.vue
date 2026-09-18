@@ -42,6 +42,12 @@
                         <option value="">Semua Lokasi</option>
                         <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
                     </select>
+                    <select v-model="params.status" class="border border-gray-100 rounded-lg px-3 py-2 text-sm bg-gray-50/50 focus:ring-[#312e81] focus:border-[#312e81] text-gray-600 min-w-[120px]">
+                        <option value="">Semua Status</option>
+                        <option value="aman">Aman</option>
+                        <option value="menipis">Menipis</option>
+                        <option value="habis">Habis</option>
+                    </select>
                     <select v-model="params.condition" class="border border-gray-100 rounded-lg px-3 py-2 text-sm bg-gray-50/50 focus:ring-[#312e81] focus:border-[#312e81] text-gray-600 min-w-[120px]">
                         <option value="">Semua Kondisi</option>
                         <option value="Normal">Normal</option>
@@ -276,7 +282,7 @@
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             </div>
                             <div class="flex-1">
-                                <h4 class="font-bold text-indigo-900 mb-1">Isi Otomatis dengan AI Gemini ✨</h4>
+                                <h4 class="font-bold text-indigo-900 mb-1">Isi Otomatis dengan AI</h4>
                                 <p class="text-xs text-indigo-700 mb-3">Punya foto label merk atau barcode inventaris? Upload disini biar AI yang mengetikkannya untuk Anda.</p>
                                     <div class="flex items-center gap-3">
                                         <div class="relative overflow-hidden inline-block">
@@ -414,6 +420,7 @@ const params = ref({
     search: props.filters.search || '',
     category: props.filters.category || '',
     location: props.filters.location || '',
+    status: props.filters.status || '',
     condition: props.filters.condition || '',
     date_start: props.filters.date_start || '',
     date_end: props.filters.date_end || '',
@@ -488,11 +495,13 @@ const getConditionBadgeClass = (condition) => {
 };
 
 const getStatusBadgeClass = (item) => {
-    const qty = item.quantity || 0;
-    
-    if (qty === 0) {
+    // Prioritas: jika barang sudah keluar (stock out), tampilkan Habis
+    if (item.is_available === false || item.is_available === 0) {
         return { text: 'Habis', class: 'inline-flex px-3 py-1 rounded-md text-[11px] font-semibold bg-[#fecaca] text-[#991b1b]' };
-    } else if (qty <= 3) {
+    }
+    
+    const qty = item.quantity || 0;
+    if (qty <= 3) {
         return { text: 'Menipis', class: 'inline-flex px-3 py-1 rounded-md text-[11px] font-semibold bg-[#fef08a] text-[#854d0e]' };
     } else {
         return { text: 'Aman', class: 'inline-flex px-3 py-1 rounded-md text-[11px] font-semibold bg-[#dcfce7] text-[#166534]' };

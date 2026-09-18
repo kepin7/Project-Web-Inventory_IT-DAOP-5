@@ -7,12 +7,26 @@ use Illuminate\Support\Facades\Log;
 
 class GeminiAiService
 {
-    protected string $apiKey;
+    protected array $apiKeys;
     protected string $baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
     public function __construct()
     {
-        $this->apiKey = env('GEMINI_API_KEY', '');
+        $keysString = env('GEMINI_API_KEYS', '');
+        $this->apiKeys = array_filter(array_map('trim', explode(',', $keysString)));
+        
+        // Fallback ke single key jika GEMINI_API_KEYS tidak ada
+        if (empty($this->apiKeys) && env('GEMINI_API_KEY')) {
+            $this->apiKeys[] = env('GEMINI_API_KEY');
+        }
+    }
+
+    protected function getRandomKey(): ?string
+    {
+        if (empty($this->apiKeys)) {
+            return null;
+        }
+        return $this->apiKeys[array_rand($this->apiKeys)];
     }
 
     /**
@@ -20,8 +34,10 @@ class GeminiAiService
      */
     public function extractFromImage(string $base64Image, string $mimeType = 'image/jpeg'): ?array
     {
-        if (empty($this->apiKey)) {
-            Log::error('Gemini API Key is not set.');
+        $apiKey = $this->getRandomKey();
+        
+        if (!$apiKey) {
+            Log::error('Gemini API Keys are not set.');
             return null;
         }
 
@@ -33,7 +49,7 @@ class GeminiAiService
                   '{"brand": "HP", "type": "PRO 3330", "serial_number": "SGH123", "inventory_number": "IT.001"} ' .
                   "Jangan tambahkan teks markdown seperti ```json atau penjelasan apapun, cukup JSON mentahnya saja.";
 
-        $response = Http::post($this->baseUrl . '?key=' . $this->apiKey, [
+        $response = Http::post($this->baseUrl . '?key=' . $apiKey, [
             'contents' => [
                 [
                     'parts' => [

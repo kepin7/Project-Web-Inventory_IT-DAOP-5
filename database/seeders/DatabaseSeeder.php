@@ -15,28 +15,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Kategori Real (ID 1 sampai 7)
-        $categories = [
-            ['id' => 1, 'name' => 'CPU', 'icon' => 'Cpu'],
-            ['id' => 2, 'name' => 'MONITOR', 'icon' => 'Monitor'],
-            ['id' => 3, 'name' => 'PRINTER', 'icon' => 'Printer'],
-            ['id' => 4, 'name' => 'SWITCH', 'icon' => 'Server'],
-            ['id' => 5, 'name' => 'UPS', 'icon' => 'Battery'],
-            ['id' => 6, 'name' => 'AIO', 'icon' => 'Monitor'],
-            ['id' => 7, 'name' => 'DRIVE', 'icon' => 'HardDrive'],
-        ];
 
-        foreach ($categories as $cat) {
-            \App\Models\Category::firstOrCreate(
-                ['id' => $cat['id']],
-                ['name' => $cat['name'], 'icon' => $cat['icon']]
-            );
-        }
+        // Akun Super Admin Utama
+        // Login melalui Magic Link menggunakan email ini
+        $superAdminEmail = 'hizkiakevin8@gmail.com'; // Ganti email ini dengan email Anda
 
-        // Lokasi Real (ID 1)
-        \App\Models\Location::firstOrCreate(
-            ['id' => 1],
-            ['name' => 'GUDANG IT', 'description' => 'Gudang utama IT DAOP 5', 'capacity' => 1000]
+        User::firstOrCreate(
+            ['email' => $superAdminEmail],
+            [
+                'name' => 'Super Administrator',
+                'role' => 'super_admin',
+                'is_active' => true,
+            ]
         );
     }
 }

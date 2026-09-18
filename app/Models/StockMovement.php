@@ -20,4 +20,9 @@ class StockMovement extends Model
     {
         return $this->belongsTo(SparePart::class);
     }
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
 }
