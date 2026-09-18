@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
 
         // Akun Super Admin Utama
         // Login melalui Magic Link menggunakan email ini
-        $superAdminEmail = 'hizkiakevin8@gmail.com'; // Ganti email ini dengan email Anda
+        $superAdminEmail = 'M.sugianto62537@gmail.com'; // Ganti email ini dengan email Anda
 
         User::firstOrCreate(
             ['email' => $superAdminEmail],
