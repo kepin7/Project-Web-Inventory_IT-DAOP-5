@@ -58,18 +58,41 @@
             </nav>
 
             <!-- Sidebar Footer: Logout Button -->
-            <div class="p-4 border-t border-gray-100" v-if="$page.props.auth?.user">
-                <Link href="/logout" method="post" as="button" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-red-600 hover:bg-red-50 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    Keluar (Logout)
-                </Link>
+            <div class="border-t border-gray-100" v-if="$page.props.auth?.user">
+                <!-- Mobile User Info -->
+                <div class="p-4 lg:hidden border-b border-gray-50 flex items-center gap-3">
+                    <img :src="`https://ui-avatars.com/api/?name=${encodeURIComponent($page.props.auth.user.name)}&background=random`" class="h-10 w-10 rounded-full bg-gray-200 object-cover flex-shrink-0">
+                    <div class="min-w-0">
+                        <div class="text-sm font-bold text-gray-900 truncate">{{ $page.props.auth.user.name }}</div>
+                        <div class="text-[10px] text-gray-500 capitalize">{{ $page.props.auth.user.role.replace('_', ' ') }}</div>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <Link href="/logout" method="post" as="button" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-red-600 hover:bg-red-50 transition-colors">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        <span class="truncate">Keluar (Logout)</span>
+                    </Link>
+                </div>
             </div>
         </aside>
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
             <!-- Topbar -->
-            <header class="h-20 bg-white/50 backdrop-blur-md border-b border-gray-200/50 flex-shrink-0 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-30">
+            <header class="h-20 bg-white/50 backdrop-blur-md border-b border-gray-200/50 flex-shrink-0 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-30 relative">
+                <!-- Mobile Search Overlay -->
+                <div v-if="isMobileSearchOpen" class="absolute inset-0 bg-white z-[60] flex items-center px-4 gap-3 md:hidden">
+                    <button @click="isMobileSearchOpen = false" class="p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <div class="relative flex-1">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        </div>
+                        <input v-model="globalSearchQuery" @keyup.enter="handleGlobalSearch" type="text" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#312e81]" placeholder="Ketik lalu Enter..." autofocus>
+                    </div>
+                </div>
+
                 <div class="flex items-center flex-1 max-w-xl gap-4">
                     <!-- Hamburger Menu Button -->
                     <button @click="toggleSidebar" class="p-2 -ml-2 rounded-xl text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#312e81] transition-colors">
@@ -78,7 +101,7 @@
                         </svg>
                     </button>
                     
-                    <div class="relative w-full z-50" v-if="$page.props.auth?.user">
+                    <div class="relative w-full z-50 hidden md:block" v-if="$page.props.auth?.user">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -101,13 +124,13 @@
 
                 <div class="flex items-center gap-6 ml-4">
                     <!-- Date/Time Display -->
-                    <div class="hidden md:flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 min-w-[240px]">
-                        <div class="p-1.5 bg-[#eef2ff] text-[#312e81] rounded-lg">
+                    <div class="flex items-center gap-2 md:gap-3 bg-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl shadow-sm border border-gray-100">
+                        <div class="hidden sm:flex p-1.5 bg-[#eef2ff] text-[#312e81] rounded-lg">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
                         <div>
-                            <div class="text-sm font-bold text-gray-900 leading-tight" v-text="currentTime"></div>
-                            <div class="text-xs text-gray-500" v-text="currentDate"></div>
+                            <div class="text-[11px] sm:text-sm font-bold text-gray-900 leading-tight whitespace-nowrap" v-text="currentTime"></div>
+                            <div class="text-[9px] sm:text-xs text-gray-500 whitespace-nowrap" v-text="currentDate"></div>
                         </div>
                     </div>
 
@@ -134,15 +157,20 @@
                             </div>
                         </transition>
                     </div>
-                    <div class="hidden md:flex items-center gap-3 border-l pl-6 border-gray-200" v-else>
-                        <Link href="/login" class="px-5 py-2.5 bg-[#1e1b4b] hover:bg-[#312e81] text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
+                    <div class="flex items-center gap-3 md:border-l md:pl-6 border-gray-200" v-else>
+                        <Link href="/login" class="px-3 sm:px-5 py-1.5 sm:py-2.5 bg-[#1e1b4b] hover:bg-[#312e81] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition-colors whitespace-nowrap">
                             Masuk
                         </Link>
                     </div>
 
                     <!-- Icons -->
                     <div class="flex items-center gap-2" v-if="$page.props.auth?.user">
-                        <button @click="isHelpModalOpen = true" class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+                        <!-- Mobile Search Toggle -->
+                        <button @click="isMobileSearchOpen = true" class="md:hidden p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </button>
+                        
+                        <button @click="isHelpModalOpen = true" class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors hidden sm:block">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </button>
                         
@@ -311,6 +339,7 @@ const isProfileMenuOpen = ref(false);
 const globalSearchQuery = ref('');
 const isSearchFocused = ref(false);
 const isHelpModalOpen = ref(false);
+const isMobileSearchOpen = ref(false);
 
 const allMenus = [
     { title: 'Beranda', url: '/' },
