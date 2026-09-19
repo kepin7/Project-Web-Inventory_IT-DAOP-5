@@ -9,24 +9,24 @@
                 <p class="text-gray-500 text-sm mt-1">Metrik inventaris real-time dan peringatan stok</p>
             </div>
             
-            <div class="flex items-center gap-3" v-if="$page.props.auth?.user">
-                <Link href="/inventory?action=add" class="px-5 py-2.5 bg-[#1e1b4b] hover:bg-[#312e81] text-white text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2">
+            <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide w-full md:w-auto" v-if="$page.props.auth?.user">
+                <Link href="/inventory?action=add" class="flex-shrink-0 px-5 py-2.5 bg-[#1e1b4b] hover:bg-[#312e81] text-white text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2 whitespace-nowrap">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Tambah Barang
                 </Link>
-                <Link href="/stock-movement?action=add" class="px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-[#1e1b4b] text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2">
+                <Link href="/stock-movement?action=add" class="flex-shrink-0 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-[#1e1b4b] text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2 whitespace-nowrap">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                     Pergerakan Stok
                 </Link>
 
-                <button @click="toggleFocusMode" class="px-5 py-2.5 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-[#312e81] text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2">
+                <button @click="toggleFocusMode" class="flex-shrink-0 px-5 py-2.5 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-[#312e81] text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2 whitespace-nowrap hidden sm:flex">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                     Fokus Mode
                 </button>
                 
                 <!-- Export Dropdown -->
-                <div class="relative" ref="exportDropdownRef">
-                    <button @click="toggleExportMenu" class="px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-[#1e1b4b] text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2">
+                <div class="relative flex-shrink-0" ref="exportDropdownRef">
+                    <button @click="toggleExportMenu" class="px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-[#1e1b4b] text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2 whitespace-nowrap">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Ekspor Laporan
                         <svg :class="['w-3.5 h-3.5 text-gray-400 transition-transform', exportMenuOpen ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
