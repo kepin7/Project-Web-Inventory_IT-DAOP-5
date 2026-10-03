@@ -15,13 +15,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-
         // Akun Super Admin Utama
         // Login melalui Magic Link menggunakan email ini
-        $superAdminEmails = [
-            'M.sugianto62537@gmail.com',
-            'hizkiakevin8@gmail.com',
-        ]; // Ganti email ini dengan email Anda
+        $superAdminEmail = 'M.sugianto62537@gmail.com';
 
         User::firstOrCreate(
             ['email' => $superAdminEmail],
@@ -31,7 +27,18 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ]
         );
+
+        // Akun Super Admin Hizkia Kevin
+        // Login melalui Magic Link menggunakan email ini
+        $hizkiaEmail = 'hizkiakevin8@gmail.com';
+
+        User::firstOrCreate(
+            ['email' => $hizkiaEmail],
+            [
+                'name' => 'Hizkia Kevin',
+                'role' => 'super_admin',
+                'is_active' => true,
+            ]
+        );
     }
 }
-
-
