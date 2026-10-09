@@ -85,3 +85,41 @@ it('can delete a spare part', function () {
         'id' => $sparePart->id,
     ]);
 });
+
+it('can create and update a spare part with quantity', function () {
+    $category = Category::factory()->create();
+    $location = Location::factory()->create();
+
+    $response = $this->actingAs($this->admin)->post('/inventory', [
+        'category_id' => $category->id,
+        'brand' => 'Cisco',
+        'type' => 'Switch 24P',
+        'condition' => 'Normal',
+        'location_id' => $location->id,
+        'quantity' => 15,
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('spare_parts', [
+        'brand' => 'Cisco',
+        'type' => 'Switch 24P',
+        'quantity' => 15,
+    ]);
+
+    $part = SparePart::where('brand', 'Cisco')->first();
+
+    $updateResponse = $this->actingAs($this->admin)->put("/inventory/{$part->id}", [
+        'category_id' => $category->id,
+        'brand' => 'Cisco',
+        'type' => 'Switch 24P Updated',
+        'condition' => 'Normal',
+        'location_id' => $location->id,
+        'quantity' => 20,
+    ]);
+
+    $updateResponse->assertRedirect();
+    $this->assertDatabaseHas('spare_parts', [
+        'id' => $part->id,
+        'quantity' => 20,
+    ]);
+});

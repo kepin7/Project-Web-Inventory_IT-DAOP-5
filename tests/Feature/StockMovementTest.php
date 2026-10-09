@@ -112,3 +112,35 @@ it('validates stock movement required fields based on type out', function () {
 
     $response->assertSessionHasErrors(['pic_name', 'date', 'destination', 'spare_part_ids']);
 });
+
+it('creates stock movement with flexible contract_number and quantity', function () {
+    $category = Category::factory()->create();
+    $sparePart = SparePart::factory()->create([
+        'category_id' => $category->id,
+        'quantity' => 10,
+        'is_available' => true,
+    ]);
+    $location = Location::factory()->create();
+
+    $response = $this->actingAs($this->admin)->post('/stock-movement', [
+        'type' => 'in',
+        'pic_name' => 'Budi Santoso',
+        'date' => now()->format('Y-m-d H:i:s'),
+        'condition' => 'Normal',
+        'contract_number' => 'KTR/DAOP5/2026/099',
+        'quantity' => 5,
+        'location_id' => $location->id,
+        'spare_part_ids' => [$sparePart->id],
+        'notes' => 'Penerimaan stok kontrak baru',
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
+
+    $this->assertDatabaseHas('stock_movements', [
+        'spare_part_id' => $sparePart->id,
+        'type' => 'in',
+        'contract_number' => 'KTR/DAOP5/2026/099',
+        'quantity' => 5,
+    ]);
+});

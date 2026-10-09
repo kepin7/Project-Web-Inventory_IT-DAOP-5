@@ -125,7 +125,14 @@
                         <tr v-for="(item, index) in spareParts.data" :key="item.id" class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-4 py-3 sm:py-4 text-center">{{ (spareParts.current_page - 1) * spareParts.per_page + index + 1 }}</td>
                             <td class="px-3 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-[13px]">{{ formatDate(item.created_at) }}</td>
-                            <td class="px-3 py-3 sm:py-4 font-medium text-gray-800 whitespace-nowrap">{{ item.brand }} ({{ item.type }})</td>
+                            <td class="px-3 py-3 sm:py-4 font-medium text-gray-800 whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    <span>{{ item.brand }} ({{ item.type }})</span>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-[#312e81] border border-indigo-100">
+                                        {{ item.quantity || 1 }} Unit
+                                    </span>
+                                </div>
+                            </td>
                             <td class="px-3 py-3 sm:py-4 text-xs sm:text-[13px] font-mono text-gray-500 whitespace-nowrap">{{ item.serial_number || '-' }}</td>
                             <td class="px-3 py-3 sm:py-4 text-xs sm:text-[13px] whitespace-nowrap">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -346,12 +353,17 @@
                                 <div v-if="form.errors.inventory_number" class="text-red-500 text-xs mt-1">{{ form.errors.inventory_number }}</div>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Kondisi</label>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Kondisi <span class="text-red-500">*</span></label>
                                 <select v-model="form.condition" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-[#312e81] focus:border-[#312e81]">
                                     <option value="Normal">Normal</option>
                                     <option value="Perbaikan">Perbaikan</option>
                                     <option value="Rusak">Rusak</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Quantity (Jumlah Unit) <span class="text-red-500">*</span></label>
+                                <input v-model.number="form.quantity" type="number" min="1" :class="{'border-red-300': form.errors.quantity}" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-[#312e81] focus:border-[#312e81]" placeholder="1" required>
+                                <div v-if="form.errors.quantity" class="text-red-500 text-xs mt-1">{{ form.errors.quantity }}</div>
                             </div>
                             <div class="col-span-1 sm:col-span-2">
                                 <label class="block text-xs font-semibold text-gray-700 mb-2">Foto / Gambar Barang</label>
@@ -552,6 +564,7 @@ const form = useForm({
     serial_number: '',
     inventory_number: '',
     condition: 'Normal',
+    quantity: 1,
     description: '',
     image: null,
     _method: 'post'
@@ -561,6 +574,7 @@ const openAddModal = () => {
     isEditing.value = false;
     editId.value = null;
     form.reset();
+    form.quantity = 1;
     imagePreview.value = null;
     isAddModalOpen.value = true;
 };
@@ -575,6 +589,7 @@ const openEditModal = (item) => {
     form.serial_number = item.serial_number || '';
     form.inventory_number = item.inventory_number || '';
     form.condition = item.condition || 'Normal';
+    form.quantity = item.quantity || 1;
     form.description = item.description || '';
     form.image = null;
     form._method = 'put';
@@ -586,6 +601,7 @@ const closeAddModal = () => {
     isAddModalOpen.value = false;
     setTimeout(() => {
         form.reset();
+        form.quantity = 1;
         form._method = 'post';
         imagePreview.value = null;
     }, 200);

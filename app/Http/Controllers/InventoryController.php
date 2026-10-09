@@ -99,7 +99,9 @@ class InventoryController extends Controller
 
         $spareParts->getCollection()->transform(function ($item) use ($brandTypeCounts) {
             $key = $item->brand.'|'.$item->type;
-            $item->quantity = $brandTypeCounts->has($key) ? $brandTypeCounts[$key]->count : 1;
+            if (empty($item->quantity)) {
+                $item->quantity = $brandTypeCounts->has($key) ? $brandTypeCounts[$key]->count : 1;
+            }
 
             return $item;
         });
@@ -122,9 +124,12 @@ class InventoryController extends Controller
             'serial_number' => 'nullable|string|max:255',
             'inventory_number' => 'nullable|string|max:255',
             'condition' => 'required|in:Normal,Perbaikan,Rusak',
+            'quantity' => 'nullable|integer|min:1',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:5120', // maks 5MB
         ]);
+
+        $validated['quantity'] = $validated['quantity'] ?? 1;
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('spare_parts', 'public');
@@ -165,9 +170,12 @@ class InventoryController extends Controller
             'serial_number' => 'nullable|string|max:255',
             'inventory_number' => 'nullable|string|max:255',
             'condition' => 'required|in:Normal,Perbaikan,Rusak',
+            'quantity' => 'nullable|integer|min:1',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:5120',
         ]);
+
+        $validated['quantity'] = $validated['quantity'] ?? 1;
 
         if ($request->hasFile('image')) {
             if ($sparePart->image) {

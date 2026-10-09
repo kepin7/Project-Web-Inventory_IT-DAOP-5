@@ -24,41 +24,154 @@
                     Fokus Mode
                 </button>
                 
-                <!-- Export Dropdown -->
-                <div class="relative flex-shrink-0" ref="exportDropdownRef">
-                    <button @click="toggleExportMenu" class="px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-[#1e1b4b] text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2 whitespace-nowrap">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        Ekspor Laporan
-                        <svg :class="['w-3.5 h-3.5 text-gray-400 transition-transform', exportMenuOpen ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
+                <!-- Export Button Trigger -->
+                <button @click="openExportModal" class="px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-[#1e1b4b] text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2 whitespace-nowrap">
+                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Ekspor Laporan
+                </button>
+            </div>
+        </div>
 
-                    <transition enter-active-class="transition ease-out duration-150" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
-                        <div v-if="exportMenuOpen" class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
-                            <div class="px-5 py-4 border-b border-gray-100">
-                                <h3 class="font-bold text-gray-900 text-sm">Ekspor Laporan</h3>
-                                <p class="text-xs text-gray-500 mt-0.5">Gabungan Inventaris, Pergerakan Stok & Kategori</p>
+        <!-- MODAL EKSPOR LAPORAN (LUAS & KOMPREHENSIF) -->
+        <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
+            <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden border border-gray-100 my-8 flex flex-col max-h-[90vh]">
+                <!-- Modal Header -->
+                <div class="px-6 py-5 bg-[#1e1b4b] text-white flex justify-between items-center flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-white/10 rounded-xl text-indigo-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-white">Ekspor Laporan Sistem Inventaris</h3>
+                            <p class="text-xs text-indigo-200">PT Kereta Api Indonesia (Persero) DAOP 5 Purwokerto</p>
+                        </div>
+                    </div>
+                    <button @click="closeExportModal" class="p-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 overflow-y-auto flex-1 space-y-6">
+                    <!-- Ringkasan Isi Laporan -->
+                    <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-4">
+                        <div class="flex items-start gap-3">
+                            <div class="p-2 bg-indigo-100 text-indigo-700 rounded-lg shrink-0 mt-0.5">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             </div>
-                            <div class="p-4 space-y-4">
-                                <div>
-                                    <label class="text-xs font-semibold text-gray-600 mb-1.5 block">Format</label>
-                                    <div class="grid grid-cols-3 gap-2">
-                                        <button @click="downloadExport('pdf')" :class="['flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-colors', exportFormat === 'pdf' ? 'border-[#312e81] bg-[#f0f1ff] text-[#312e81]' : 'border-gray-200 hover:border-gray-300 text-gray-600']">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                            <span class="text-[10px] font-bold">PDF</span>
-                                        </button>
-                                        <button @click="downloadExport('xlsx')" :class="['flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-colors', exportFormat === 'xlsx' ? 'border-[#312e81] bg-[#f0f1ff] text-[#312e81]' : 'border-gray-200 hover:border-gray-300 text-gray-600']">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                            <span class="text-[10px] font-bold">Excel</span>
-                                        </button>
-                                        <button @click="downloadExport('csv')" :class="['flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-colors', exportFormat === 'csv' ? 'border-[#312e81] bg-[#f0f1ff] text-[#312e81]' : 'border-gray-200 hover:border-gray-300 text-gray-600']">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                            <span class="text-[10px] font-bold">CSV</span>
-                                        </button>
+                            <div class="text-xs text-gray-600 leading-relaxed">
+                                <span class="font-bold text-gray-800 text-sm block mb-1">Cakupan Data Dokumen:</span>
+                                Laporan ini berisi rekapan gabungan resmi: <strong class="text-gray-900">Data Master Inventaris Spare Part</strong>, <strong class="text-gray-900">Riwayat Pergerakan Stok (Masuk & Keluar)</strong>, serta <strong class="text-gray-900">Rekapitulasi Kategori dan Lokasi</strong>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Format Ekspor -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Pilih Format Laporan</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <!-- Opsi PDF -->
+                            <div
+                                @click="selectedFormat = 'pdf'"
+                                :class="[
+                                    'cursor-pointer rounded-xl p-4 border-2 transition-all flex flex-col justify-between relative',
+                                    selectedFormat === 'pdf'
+                                        ? 'border-red-500 bg-red-50/40 shadow-sm'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                ]"
+                            >
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center">
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9.5 8.5c0 .83-.67 1.5-1.5 1.5H7v2H5.5V9H8c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V9H13c.83 0 1.5.67 1.5 1.5v3zm4-3H17v1h1.5V13H17v2h-1.5V9h3v1.5zm-10-1H7v1.5h1V10.5zm4.5 0h-1v2.5h1c.28 0 .5-.22.5-.5v-1.5c0-.28-.22-.5-.5-.5z"/></svg>
                                     </div>
+                                    <span v-if="selectedFormat === 'pdf'" class="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs">
+                                        ✓
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-sm text-gray-900">Dokumen PDF</div>
+                                    <div class="text-[11px] text-gray-500 mt-1 leading-snug">Siap cetak & tanda tangan dengan kop surat resmi.</div>
+                                </div>
+                            </div>
+
+                            <!-- Opsi Excel -->
+                            <div
+                                @click="selectedFormat = 'xlsx'"
+                                :class="[
+                                    'cursor-pointer rounded-xl p-4 border-2 transition-all flex flex-col justify-between relative',
+                                    selectedFormat === 'xlsx'
+                                        ? 'border-emerald-600 bg-emerald-50/40 shadow-sm'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                ]"
+                            >
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9.5 16.5l-1.5-3.5-1.5 3.5H5l2.5-5L5 6.5h1.5l1.5 3.5 1.5-3.5H11l-2.5 5 2.5 5h-1.5zm8.5 0h-5V6.5h1.5V15H18v1.5z"/></svg>
+                                    </div>
+                                    <span v-if="selectedFormat === 'xlsx'" class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs">
+                                        ✓
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-sm text-gray-900">Excel (.xlsx)</div>
+                                    <div class="text-[11px] text-gray-500 mt-1 leading-snug">Format spreadsheet lengkap untuk analisis data.</div>
+                                </div>
+                            </div>
+
+                            <!-- Opsi CSV -->
+                            <div
+                                @click="selectedFormat = 'csv'"
+                                :class="[
+                                    'cursor-pointer rounded-xl p-4 border-2 transition-all flex flex-col justify-between relative',
+                                    selectedFormat === 'csv'
+                                        ? 'border-blue-600 bg-blue-50/40 shadow-sm'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                ]"
+                            >
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    </div>
+                                    <span v-if="selectedFormat === 'csv'" class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">
+                                        ✓
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-sm text-gray-900">File CSV (.csv)</div>
+                                    <div class="text-[11px] text-gray-500 mt-1 leading-snug">Data mentah tabular terpisah koma.</div>
                                 </div>
                             </div>
                         </div>
-                    </transition>
+                    </div>
+
+                    <!-- Metadata Laporan -->
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 text-xs text-gray-600 grid grid-cols-2 gap-3">
+                        <div>
+                            <span class="text-gray-400 block text-[10px] uppercase font-bold">Total Unit Barang</span>
+                            <span class="font-bold text-gray-900 text-sm">{{ totalSpareParts }} Unit</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 block text-[10px] uppercase font-bold">Pengunduh</span>
+                            <span class="font-medium text-gray-900">{{ $page.props.auth?.user?.name || 'Administrator' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
+                    <button
+                        @click="closeExportModal"
+                        class="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
+                    >
+                        Tutup
+                    </button>
+                    <button
+                        @click="downloadExport(selectedFormat)"
+                        class="px-6 py-2.5 bg-[#1e1b4b] hover:bg-[#312e81] text-white text-sm font-semibold rounded-xl shadow transition-colors flex items-center gap-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Unduh Laporan ({{ selectedFormat.toUpperCase() }})
+                    </button>
                 </div>
             </div>
         </div>
@@ -475,11 +588,15 @@ const repairPercentage = computed(() => getPercentage(props.repairCount));
 const brokenPercentage = computed(() => getPercentage(props.brokenCount));
 
 // ===== EXPORT =====
-const exportMenuOpen = ref(false);
-const exportDropdownRef = ref(null);
+const exportModalOpen = ref(false);
+const selectedFormat = ref('pdf');
 
-const toggleExportMenu = () => {
-    exportMenuOpen.value = !exportMenuOpen.value;
+const openExportModal = () => {
+    exportModalOpen.value = true;
+};
+
+const closeExportModal = () => {
+    exportModalOpen.value = false;
 };
 
 const toggleFocusMode = () => {
@@ -499,21 +616,7 @@ const toggleFocusMode = () => {
 
 const downloadExport = (format) => {
     window.location.href = `/export/${format}`;
-    exportMenuOpen.value = false;
-};
-
-onMounted(() => {
-    document.addEventListener('click', handleExportClickOutside);
-});
-
-onUnmounted(() => {
-    document.removeEventListener('click', handleExportClickOutside);
-});
-
-const handleExportClickOutside = (event) => {
-    if (exportMenuOpen.value && exportDropdownRef.value && !exportDropdownRef.value.contains(event.target)) {
-        exportMenuOpen.value = false;
-    }
+    exportModalOpen.value = false;
 };
 
 // ===== ACTIVITY HELPERS =====

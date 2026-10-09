@@ -40,5 +40,18 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ]
         );
+
+        // Akun Super Admin Naufal Zaki
+        // Login melalui Magic Link menggunakan email ini
+        $hizkiaEmail = 'naufalzaki2583@gmail.com';
+
+        User::firstOrCreate(
+            ['email' => $hizkiaEmail],
+            [
+                'name' => 'Naufal Zaki',
+                'role' => 'super_admin',
+                'is_active' => true,
+            ]
+        );
     }
 }
